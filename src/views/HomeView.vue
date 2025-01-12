@@ -18,6 +18,7 @@
             v-for="searchResult in mapboxSearchResult"
             :key="searchResult.id"
             class="py-2 cursor-pointer text-white"
+            @click="previewCity(searchResult)"
           >
             {{ searchResult.place_name }}
           </li>
@@ -29,7 +30,9 @@
 
 <script setup>
 import axios from "axios";
+import { useRouter } from "vue-router";
 import { ref } from "vue";
+import CityView from "../views/CityView.vue";
 
 // Use the environment variable for the Mapbox API key
 const mapboxApiKey = import.meta.env.VITE_MAPBOX_API_KEY;
@@ -40,6 +43,22 @@ const mapboxSearchResult = ref(null);
 
 // Error handling
 const searchError = ref("");
+
+const router = useRouter();
+const previewCity = (searchResult) => {
+  console.log(searchResult);
+
+  const [city, state] = searchResult.place_name.split(",");
+  router.push({
+    name: "cityView",
+    params: { state: state.replaceAll(" ", ""), city: city },
+    query: {
+      lat: searchResult.lat,
+      long: searchResult.long,
+      preview: true,
+    },
+  });
+};
 
 const getSearchResults = () => {
   clearTimeout(queryTimeout.value);
@@ -62,9 +81,8 @@ const getSearchResults = () => {
           mapboxSearchResult.value = result.data.features;
           searchError.value = "";
         }
-        console.log(mapboxSearchResult.value);
+        //console.log(mapboxSearchResult.value);
       } catch (error) {
-        console.error(error);
         searchError.value = "Error finding a city.";
         mapboxSearchResult.value = null;
       }
